@@ -1,0 +1,1262 @@
+<title>Inventário de Switches</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --surface: #16212c;
+    --surface-2: #1c2937;
+    --border: #2a3948;
+    --ink: #e7edf3;
+    --muted: #8fa2b3;
+    --accent: #d97b3f;
+    --accent-ink: #1a1006;
+    --accent-2: #4fb0a8;
+    --success: #4caf6b;
+    --success-bg: rgba(76, 175, 107, 0.14);
+    --warning: #e0a83e;
+    --warning-bg: rgba(224, 168, 62, 0.14);
+    --danger: #e0574c;
+    --danger-bg: rgba(224, 87, 76, 0.14);
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #eef1f4;
+      --border: #d7dee4;
+      --ink: #16202b;
+      --muted: #5b6b78;
+      --accent: #b85f28;
+      --accent-ink: #ffffff;
+      --accent-2: #2f8a82;
+      --success: #2e7d46;
+      --success-bg: rgba(46, 125, 70, 0.1);
+      --warning: #a6721f;
+      --warning-bg: rgba(166, 114, 31, 0.12);
+      --danger: #b3392f;
+      --danger-bg: rgba(179, 57, 47, 0.1);
+      --shadow: 0 1px 2px rgba(20, 30, 40, 0.06), 0 8px 20px -14px rgba(20, 30, 40, 0.3);
+      color-scheme: light;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1720;
+    --surface: #16212c;
+    --surface-2: #1c2937;
+    --border: #2a3948;
+    --ink: #e7edf3;
+    --muted: #8fa2b3;
+    --accent: #d97b3f;
+    --accent-ink: #1a1006;
+    --accent-2: #4fb0a8;
+    --success: #4caf6b;
+    --success-bg: rgba(76, 175, 107, 0.14);
+    --warning: #e0a83e;
+    --warning-bg: rgba(224, 168, 62, 0.14);
+    --danger: #e0574c;
+    --danger-bg: rgba(224, 87, 76, 0.14);
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --surface-2: #eef1f4;
+    --border: #d7dee4;
+    --ink: #16202b;
+    --muted: #5b6b78;
+    --accent: #b85f28;
+    --accent-ink: #ffffff;
+    --accent-2: #2f8a82;
+    --success: #2e7d46;
+    --success-bg: rgba(46, 125, 70, 0.1);
+    --warning: #a6721f;
+    --warning-bg: rgba(166, 114, 31, 0.12);
+    --danger: #b3392f;
+    --danger-bg: rgba(179, 57, 47, 0.1);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  header.page-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 2px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13.5px;
+    max-width: 52ch;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  /* ---- buttons ---- */
+  .btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: filter 0.12s ease, transform 0.12s ease;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
+  }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .btn-ghost {
+    background: transparent;
+  }
+  .btn-danger {
+    background: transparent;
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .btn-block { width: 100%; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-sm { padding: 6px 10px; font-size: 12.5px; border-radius: 6px; }
+
+  /* ---- capture ---- */
+  .scan-frame {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #05090d;
+    aspect-ratio: 4 / 3;
+    display: none;
+  }
+  .scan-frame.active { display: block; }
+  .scan-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .scan-reticle {
+    position: absolute;
+    inset: 14% 10%;
+    pointer-events: none;
+  }
+  .scan-reticle::before,
+  .scan-reticle::after,
+  .scan-reticle span::before,
+  .scan-reticle span::after {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border: 2.5px solid var(--accent);
+  }
+  .scan-reticle::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .scan-reticle::after { top: 0; right: 0; border-left: none; border-bottom: none; }
+  .scan-reticle span::before { bottom: 0; left: 0; border-right: none; border-top: none; }
+  .scan-reticle span::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+  .scan-line {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 14%;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 8px 1px var(--accent);
+    animation: scanmove 1.7s ease-in-out infinite;
+  }
+  @keyframes scanmove {
+    0%, 100% { top: 14%; }
+    50% { top: 84%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scan-line { animation: none; top: 49%; }
+  }
+
+  .scan-status {
+    font-size: 12.5px;
+    color: var(--muted);
+    min-height: 1.2em;
+  }
+  .scan-status[data-state="found"] { color: var(--success); font-weight: 600; }
+
+  .unsupported-note {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: none;
+  }
+  .unsupported-note.show { display: block; }
+
+  .photo-zoom-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .photo-zoom-wrap.show { display: flex; }
+  .photo-viewport {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 46vh;
+    background: var(--surface-2);
+    touch-action: pan-x pan-y;
+  }
+  .photo-viewport img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: width 0.1s linear;
+  }
+  .zoom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .zoom-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+
+  .codes-found {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .code-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+  }
+  .code-chip .val {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Roboto Mono", monospace;
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .code-chip .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  /* ---- form ---- */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  input[type="text"], select {
+    font: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 10px 11px;
+    font-size: 14.5px;
+  }
+  input[type="text"].mono {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Roboto Mono", monospace;
+    letter-spacing: 0.02em;
+  }
+  input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 1px;
+  }
+  .hint { font-size: 11.5px; color: var(--muted); }
+  .hint.err { color: var(--danger); }
+  .hint.ok { color: var(--success); }
+
+  .form-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .edit-banner {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .edit-banner.show { display: flex; }
+
+  /* ---- table ---- */
+  .table-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .table-toolbar input[type="text"] { flex: 1; min-width: 140px; }
+  .count-pill {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 9px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 480px;
+    font-size: 13px;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-2);
+    text-align: left;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface-2) 45%, transparent); }
+  td.mono {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  td.model-cell { max-width: 160px; }
+  td.actions-cell { white-space: nowrap; text-align: right; }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 3px 5px;
+    border-radius: 5px;
+  }
+  .icon-btn:hover { color: var(--ink); background: var(--surface-2); }
+  .icon-btn.danger:hover { color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 26px 10px;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 40;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  footer.note {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+    padding-top: 4px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>
+
+<div class="wrap">
+  <header class="page-head">
+    <span class="eyebrow">Telecomunicação · TIC · SENAC-ARRJ</span>
+    <h1>Inventário de switches</h1>
+    <p class="subtitle">Escaneie o código de barras (ao vivo, pelo app ZXing, ou por foto), confira modelo / nº de série / MAC e adicione à tabela consolidada.</p>
+  </header>
+
+  <!-- STEP 1: CAPTURE -->
+  <section class="card" aria-labelledby="capture-title">
+    <div class="card-head">
+      <span class="card-title" id="capture-title"><span class="step-no">1</span> Capturar etiqueta</span>
+    </div>
+
+    <div class="field" style="background:var(--surface-2); border:1px solid var(--accent); border-radius:8px; padding:10px;">
+      <label for="pasteReading">⚡ Colar leitura (alternativa manual)</label>
+      <input type="text" id="pasteReading" class="mono" placeholder="Cole aqui os dois valores juntos, ex.: VN63MXB00F  5C:A4:7D:FA:B6:C0" autocomplete="off">
+      <span class="hint" id="pasteHint">Mande a foto da etiqueta pro Claude no chat, peça o Nº de série e o MAC, e cole a resposta aqui de uma vez — o app separa sozinho.</span>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" id="btnStartScan">📷 Escanear com a câmera</button>
+      <button type="button" class="btn" id="btnStopScan" style="display:none;">■ Parar câmera</button>
+      <a class="btn" id="btnZxing" href="#">📷 Abrir Barcode Scanner (ZXing)</a>
+      <label class="btn" for="photoInput">🖼️ Tirar / enviar foto</label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="sr-only">
+    </div>
+    <p class="hint" id="zxingHint" style="margin:0;">"Escanear com a câmera" lê ao vivo pelo navegador. "Barcode Scanner (ZXing)" abre o app dedicado que você já tem instalado (se houver) e volta pra cá sozinho com o valor.</p>
+
+    <p class="unsupported-note" id="scanUnsupported">Este navegador não oferece leitura automática de código de barras. Use "Tirar/enviar foto" e digite os dados com apoio da imagem ampliada, ou peça pro Claude ler a foto no chat e cole o resultado em "⚡ Colar leitura".</p>
+
+    <div class="scan-frame" id="scanFrame">
+      <video id="scanVideo" autoplay muted playsinline></video>
+      <div class="scan-reticle"><span></span></div>
+      <div class="scan-line"></div>
+    </div>
+    <p class="scan-status" id="scanStatus" aria-live="polite"></p>
+
+    <div class="photo-zoom-wrap" id="photoZoomWrap">
+      <div class="photo-viewport" id="photoViewport">
+        <img id="photoImg" alt="Foto da etiqueta do switch, amplie para ler o texto">
+      </div>
+      <div class="zoom-row">
+        <span>🔍 Zoom</span>
+        <input type="range" id="zoomSlider" min="100" max="400" value="140" step="10">
+        <span id="zoomLabel">140%</span>
+      </div>
+    </div>
+
+    <p class="unsupported-note show" style="margin:0;">Os códigos ficam bem próximos nessa etiqueta — o app vai <strong>acumulando</strong> cada código diferente que aparecer, mesmo em fotos separadas (tire quantas fotos precisar da mesma etiqueta, de ângulos/distâncias diferentes). Nenhum some quando outro é lido; use "Limpar códigos lidos" ao trocar de equipamento.</p>
+
+    <div class="codes-found-head" id="codesFoundHead" style="display:none; align-items:center; justify-content:space-between; gap:8px;">
+      <span class="hint" id="codesFoundCount"></span>
+      <button type="button" class="btn btn-sm btn-ghost" id="btnClearCodes">🗑 Limpar códigos lidos</button>
+    </div>
+    <div class="codes-found" id="codesFound" aria-live="polite"></div>
+  </section>
+
+  <!-- STEP 2: FORM -->
+  <section class="card" aria-labelledby="form-title">
+    <div class="card-head">
+      <span class="card-title" id="form-title"><span class="step-no">2</span> Dados do equipamento</span>
+    </div>
+
+    <div class="edit-banner" id="editBanner">
+      <span>Editando item da tabela</span>
+      <button type="button" class="btn btn-sm btn-ghost" id="btnCancelEdit">Cancelar</button>
+    </div>
+
+    <form id="deviceForm" class="form-grid" novalidate>
+      <div class="field">
+        <label for="fModel">Modelo</label>
+        <input type="text" id="fModel" list="modelList" value="HPE Aruba 6200F 48G PoE CL4 4SFP 370W (JL727B)" placeholder="ex.: HPE Aruba 6200F 48G PoE CL4 4SFP 370W (JL727B)" autocomplete="off">
+        <datalist id="modelList">
+          <option value="HPE Aruba 6200F 48G PoE CL4 4SFP 370W (JL727B)">
+        </datalist>
+        <span class="hint">Pré-preenchido com o único modelo em uso — troque aqui se precisar.</span>
+      </div>
+
+      <div class="field">
+        <label for="fSerial">Número de série <span id="serialCount" style="font-weight:400;">(0 caractere)</span></label>
+        <input type="text" id="fSerial" class="mono" placeholder="ex.: VN63MXB00F" autocomplete="off">
+        <span class="hint" id="serialHint"></span>
+      </div>
+
+      <div class="field">
+        <label for="fMac">Endereço MAC <span id="macCount" style="font-weight:400;">(0/12 hex)</span></label>
+        <input type="text" id="fMac" class="mono" placeholder="ex.: 00:1A:2B:3C:4D:5E" autocomplete="off">
+        <span class="hint" id="macHint">Aceita com : - . ou sem separador — normalizado automaticamente para 12 caracteres hex.</span>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary btn-block" id="btnSubmit">＋ Adicionar à tabela</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- STEP 3: TABLE -->
+  <section class="card" aria-labelledby="table-title">
+    <div class="card-head">
+      <span class="card-title" id="table-title"><span class="step-no">3</span> Tabela consolidada</span>
+      <span class="count-pill" id="countPill">0 itens</span>
+    </div>
+
+    <div class="table-toolbar">
+      <input type="text" id="searchBox" placeholder="Buscar por modelo, série ou MAC…">
+      <button type="button" class="btn btn-sm" id="btnExport">⬇ Exportar CSV</button>
+      <button type="button" class="btn btn-sm btn-danger" id="btnClearAll">Limpar tudo</button>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th>Nº de série</th>
+            <th>Endereço MAC</th>
+            <th>Adicionado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <p class="empty-state" id="emptyState">Nenhum equipamento cadastrado ainda. Envie uma foto, cole a leitura ou digite os dados acima.</p>
+  </section>
+
+  <footer class="note">Os dados ficam salvos apenas neste navegador (armazenamento local do dispositivo).</footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "switchInventory_v1";
+  var items = [];
+  var editingId = null;
+  var seenCodes = {};
+  var seenOrder = [];
+
+  // ---------- persistence ----------
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      items = raw ? JSON.parse(raw) : [];
+    } catch (e) { items = []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) {}
+  }
+
+  // ---------- helpers ----------
+  function uid() { return "id" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+
+  function normalizeMac(raw) {
+    if (!raw) return null;
+    var hex = raw.replace(/[^0-9a-fA-F]/g, "").toUpperCase();
+    if (hex.length !== 12) return null;
+    return hex.match(/.{1,2}/g).join(":");
+  }
+
+  function looksLikeSerial(v) {
+    return /^[A-Za-z0-9\-]{5,32}$/.test(v.trim());
+  }
+
+  // Nº de série deste modelo tem sempre 10 caracteres — ajuste aqui se um novo modelo entrar no inventário.
+  var EXPECTED_SERIAL_LEN = 10;
+  function isExpectedSerial(v) {
+    var t = v.trim();
+    return t.length === EXPECTED_SERIAL_LEN && /^[A-Za-z0-9]+$/.test(t);
+  }
+
+  function escCsv(v) {
+    v = String(v == null ? "" : v);
+    if (/[",\n;]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove("show"); }, 2200);
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    var q = document.getElementById("searchBox").value.trim().toLowerCase();
+    var body = document.getElementById("tableBody");
+    var empty = document.getElementById("emptyState");
+    var filtered = items.filter(function (it) {
+      if (!q) return true;
+      return (it.model + " " + it.serial + " " + it.mac).toLowerCase().indexOf(q) !== -1;
+    }).sort(function (a, b) { return b.createdAt.localeCompare(a.createdAt); });
+
+    body.innerHTML = "";
+    filtered.forEach(function (it) {
+      var tr = document.createElement("tr");
+
+      var tdModel = document.createElement("td");
+      tdModel.className = "model-cell";
+      tdModel.textContent = it.model || "—";
+      tr.appendChild(tdModel);
+
+      var tdSerial = document.createElement("td");
+      tdSerial.className = "mono";
+      tdSerial.textContent = it.serial || "—";
+      tr.appendChild(tdSerial);
+
+      var tdMac = document.createElement("td");
+      tdMac.className = "mono";
+      tdMac.textContent = it.mac || "—";
+      tr.appendChild(tdMac);
+
+      var tdDate = document.createElement("td");
+      tdDate.textContent = fmtDate(it.createdAt);
+      tdDate.style.color = "var(--muted)";
+      tdDate.style.fontSize = "12px";
+      tr.appendChild(tdDate);
+
+      var tdActions = document.createElement("td");
+      tdActions.className = "actions-cell";
+      var editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "icon-btn";
+      editBtn.title = "Editar";
+      editBtn.setAttribute("aria-label", "Editar item");
+      editBtn.textContent = "✎";
+      editBtn.addEventListener("click", function () { startEdit(it.id); });
+      var delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "icon-btn danger";
+      delBtn.title = "Excluir";
+      delBtn.setAttribute("aria-label", "Excluir item");
+      delBtn.textContent = "🗑";
+      delBtn.addEventListener("click", function () { removeItem(it.id); });
+      tdActions.appendChild(editBtn);
+      tdActions.appendChild(delBtn);
+      tr.appendChild(tdActions);
+
+      body.appendChild(tr);
+    });
+
+    empty.style.display = items.length === 0 ? "block" : "none";
+    document.getElementById("countPill").textContent = items.length + (items.length === 1 ? " item" : " itens") +
+      (q && filtered.length !== items.length ? " · " + filtered.length + " exibidos" : "");
+  }
+
+  function removeItem(id) {
+    if (!confirm("Excluir este equipamento da tabela?")) return;
+    items = items.filter(function (it) { return it.id !== id; });
+    save();
+    render();
+    toast("Item excluído");
+  }
+
+  function startEdit(id) {
+    var it = items.find(function (i) { return i.id === id; });
+    if (!it) return;
+    editingId = id;
+    document.getElementById("fModel").value = it.model;
+    document.getElementById("fSerial").value = it.serial;
+    document.getElementById("fMac").value = it.mac;
+    document.getElementById("editBanner").classList.add("show");
+    document.getElementById("btnSubmit").textContent = "✓ Salvar alterações";
+    document.getElementById("fModel").scrollIntoView({ behavior: "smooth", block: "center" });
+    updateSerialCount();
+    updateMacCount();
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    document.getElementById("deviceForm").reset();
+    document.getElementById("editBanner").classList.remove("show");
+    document.getElementById("btnSubmit").textContent = "＋ Adicionar à tabela";
+    document.getElementById("serialHint").textContent = "";
+    document.getElementById("macHint").textContent = "Aceita com : - . ou sem separador — normalizado automaticamente para 12 caracteres hex.";
+    document.getElementById("macHint").className = "hint";
+    document.getElementById("pasteReading").value = "";
+    document.getElementById("pasteHint").textContent = "Mande a foto da etiqueta pro Claude no chat, peça o Nº de série e o MAC, e cole a resposta aqui de uma vez — o app separa sozinho.";
+    document.getElementById("pasteHint").className = "hint";
+    updateSerialCount();
+    updateMacCount();
+  }
+
+  // ---------- form ----------
+  document.getElementById("deviceForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var model = document.getElementById("fModel").value.trim();
+    var serialRaw = document.getElementById("fSerial").value.trim();
+    var macRaw = document.getElementById("fMac").value.trim();
+
+    var serialHint = document.getElementById("serialHint");
+    var macHint = document.getElementById("macHint");
+    serialHint.textContent = "";
+    serialHint.className = "hint";
+    macHint.className = "hint";
+
+    var valid = true;
+    if (!model) { valid = false; }
+    if (!serialRaw) {
+      serialHint.textContent = "Informe o número de série.";
+      serialHint.className = "hint err";
+      valid = false;
+    }
+
+    var mac = macRaw ? normalizeMac(macRaw) : null;
+    if (macRaw && !mac) {
+      macHint.textContent = "MAC inválido — use 12 caracteres hexadecimais (ex.: 00:1A:2B:3C:4D:5E).";
+      macHint.className = "hint err";
+      valid = false;
+    }
+    if (!macRaw) {
+      macHint.textContent = "Informe o endereço MAC.";
+      macHint.className = "hint err";
+      valid = false;
+    }
+    if (!model) {
+      document.getElementById("fModel").focus();
+    }
+    if (!valid) return;
+
+    var serial = serialRaw.toUpperCase();
+
+    var dupe = items.find(function (it) {
+      return it.id !== editingId && (it.serial === serial || it.mac === mac);
+    });
+    if (dupe) {
+      var proceed = confirm("Já existe um item com este número de série ou MAC (" + dupe.model + "). Adicionar mesmo assim?");
+      if (!proceed) return;
+    }
+
+    if (editingId) {
+      var it = items.find(function (i) { return i.id === editingId; });
+      it.model = model; it.serial = serial; it.mac = mac;
+      toast("Alterações salvas");
+    } else {
+      items.push({ id: uid(), model: model, serial: serial, mac: mac, createdAt: new Date().toISOString() });
+      resetDetectedCodes();
+      toast("Equipamento adicionado — pronto pro próximo");
+    }
+    save();
+    cancelEdit();
+    render();
+  });
+
+  document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
+
+  function updateSerialCount() {
+    var v = document.getElementById("fSerial").value.trim();
+    document.getElementById("serialCount").textContent = "(" + v.length + (v.length === 1 ? " caractere)" : " caracteres)");
+  }
+  function updateMacCount() {
+    var v = document.getElementById("fMac").value;
+    var hexLen = v.replace(/[^0-9a-fA-F]/g, "").length;
+    var label = document.getElementById("macCount");
+    label.textContent = "(" + hexLen + "/12 hex)";
+    label.style.color = hexLen === 12 ? "var(--success)" : (hexLen === 0 ? "" : "var(--danger)");
+  }
+
+  document.getElementById("fSerial").addEventListener("input", updateSerialCount);
+  document.getElementById("fMac").addEventListener("input", updateMacCount);
+
+  // ---------- paste-to-fill ----------
+  var MAC_IN_TEXT = /([0-9A-Fa-f]{1,2}[:\-.\s]?){5}[0-9A-Fa-f]{1,2}/;
+
+  function applyPastedReading(text) {
+    if (!text || !text.trim()) return;
+    var macFound = text.match(MAC_IN_TEXT);
+    var mac = macFound ? normalizeMac(macFound[0]) : null;
+    var remainder = macFound ? text.replace(macFound[0], " ") : text;
+    var serialFound = remainder.match(/[A-Za-z0-9]{5,20}/g);
+    var serial = null;
+    var serialWrongLen = null;
+    if (serialFound) {
+      // prefer a token with exactly the expected length; fall back to flagging a near-miss
+      serial = serialFound.find(function (t) { return t.length === EXPECTED_SERIAL_LEN; });
+      if (!serial) {
+        var candidate = serialFound.find(function (t) { return !/^[0-9A-Fa-f]{6,20}$/.test(t) || t.length !== 12; }) || serialFound[0];
+        if (candidate) serialWrongLen = candidate;
+      }
+    }
+
+    var filled = [];
+    var warnings = [];
+    if (serial) { document.getElementById("fSerial").value = serial.toUpperCase(); updateSerialCount(); filled.push("Nº de série"); }
+    else if (serialWrongLen) { warnings.push("achei \"" + serialWrongLen + "\" (" + serialWrongLen.length + " car., não " + EXPECTED_SERIAL_LEN + ") — não preenchi o Nº de série, confira à mão"); }
+    if (mac) { document.getElementById("fMac").value = mac; updateMacCount(); filled.push("MAC"); }
+
+    var hint = document.getElementById("pasteHint");
+    if (filled.length && !warnings.length) {
+      hint.textContent = "✓ Preenchido: " + filled.join(" e ") + ". Confira os campos abaixo e adicione à tabela.";
+      hint.className = "hint ok";
+      toast("Preenchido a partir do texto colado");
+    } else if (filled.length && warnings.length) {
+      hint.textContent = "✓ Preenchido: " + filled.join(" e ") + ". ⚠ " + warnings.join("; ") + ".";
+      hint.className = "hint err";
+    } else if (warnings.length) {
+      hint.textContent = "⚠ " + warnings.join("; ") + ".";
+      hint.className = "hint err";
+    } else {
+      hint.textContent = "Não encontrei um Nº de série nem um MAC reconhecível nesse texto — confira ou digite direto nos campos abaixo.";
+      hint.className = "hint err";
+    }
+  }
+
+  var pasteInput = document.getElementById("pasteReading");
+  pasteInput.addEventListener("paste", function () {
+    var el = this;
+    setTimeout(function () { applyPastedReading(el.value); }, 0);
+  });
+  pasteInput.addEventListener("change", function () { applyPastedReading(this.value); });
+  pasteInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); applyPastedReading(this.value); }
+  });
+
+  document.getElementById("fMac").addEventListener("blur", function () {
+    var mac = normalizeMac(this.value);
+    if (mac) this.value = mac;
+    updateMacCount();
+  });
+
+  document.getElementById("searchBox").addEventListener("input", render);
+
+  document.getElementById("btnExport").addEventListener("click", function () {
+    if (items.length === 0) { toast("Nada para exportar ainda"); return; }
+    var rows = [["Modelo", "Numero de Serie", "Endereco MAC", "Adicionado em"]];
+    items.slice().sort(function (a, b) { return a.model.localeCompare(b.model); }).forEach(function (it) {
+      rows.push([it.model, it.serial, it.mac, fmtDate(it.createdAt)]);
+    });
+    var csv = "﻿" + rows.map(function (r) { return r.map(escCsv).join(";"); }).join("\r\n");
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = "inventario-switches-" + stamp + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast("CSV exportado");
+  });
+
+  document.getElementById("btnClearAll").addEventListener("click", function () {
+    if (items.length === 0) return;
+    if (!confirm("Isso vai apagar todos os " + items.length + " itens salvos neste navegador. Continuar?")) return;
+    items = [];
+    save();
+    render();
+    toast("Tabela limpa");
+  });
+
+  // ---------- barcode detection ----------
+  var hasDetector = "BarcodeDetector" in window;
+  var detector = null;
+  if (hasDetector) {
+    try {
+      detector = new BarcodeDetector({
+        formats: ["qr_code", "code_128", "code_39", "code_93", "codabar", "ean_13", "ean_8", "upc_a", "upc_e", "itf", "pdf417", "data_matrix", "aztec"]
+      });
+    } catch (e) {
+      try { detector = new BarcodeDetector(); } catch (e2) { hasDetector = false; }
+    }
+  }
+  if (!hasDetector) {
+    document.getElementById("scanUnsupported").classList.add("show");
+    document.getElementById("btnStartScan").disabled = true;
+  } else if (typeof BarcodeDetector.getSupportedFormats === "function") {
+    BarcodeDetector.getSupportedFormats().then(function (formats) {
+      if (!formats || !formats.length) {
+        hasDetector = false;
+        var note = document.getElementById("scanUnsupported");
+        note.classList.add("show");
+        note.textContent = "Este navegador diz suportar leitura de código de barras, mas não reporta nenhum formato disponível — provavelmente falta o componente do sistema (Google Play Services / ML Kit) neste aparelho. Use \"Tirar/enviar foto\", o app ZXing, ou o campo \"Colar leitura\".";
+        document.getElementById("btnStartScan").disabled = true;
+      }
+    }).catch(function () {});
+  }
+
+  function classifyCode(value) {
+    var mac = normalizeMac(value);
+    if (mac) return { kind: "mac", clean: mac };
+    if (isExpectedSerial(value)) return { kind: "serial", clean: value.trim().toUpperCase() };
+    if (looksLikeSerial(value)) return { kind: "maybe-serial", clean: value.toUpperCase() };
+    return { kind: "unknown", clean: value };
+  }
+
+  function addDetectedCodes(codes) {
+    var added = 0;
+    codes.forEach(function (c) {
+      if (!c || !c.rawValue) return;
+      if (!(c.rawValue in seenCodes)) { seenOrder.push(c.rawValue); added++; }
+      seenCodes[c.rawValue] = c;
+    });
+    renderCodesFound(seenOrder.map(function (v) { return seenCodes[v]; }));
+    return added;
+  }
+
+  function resetDetectedCodes() {
+    seenCodes = {};
+    seenOrder = [];
+    renderCodesFound([]);
+  }
+
+  function renderCodesFound(codes) {
+    var wrap = document.getElementById("codesFound");
+    var head = document.getElementById("codesFoundHead");
+    wrap.innerHTML = "";
+    head.style.display = codes.length ? "flex" : "none";
+    document.getElementById("codesFoundCount").textContent = codes.length
+      ? codes.length + " código(s) diferente(s) já lido(s) nesta sessão"
+      : "";
+    codes.forEach(function (c) {
+      var info = classifyCode(c.rawValue);
+      var chip = document.createElement("div");
+      chip.className = "code-chip";
+
+      var val = document.createElement("span");
+      val.className = "val";
+      val.textContent = c.rawValue;
+      chip.appendChild(val);
+
+      if (info.kind === "mac") {
+        var tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = "parece MAC";
+        chip.appendChild(tag);
+      } else if (info.kind === "serial") {
+        var tagS = document.createElement("span");
+        tagS.className = "tag";
+        tagS.textContent = "parece Nº de série (" + EXPECTED_SERIAL_LEN + " car.)";
+        chip.appendChild(tagS);
+      }
+
+      var toModel = document.createElement("button");
+      toModel.type = "button";
+      toModel.className = "btn btn-sm";
+      toModel.textContent = "→ Modelo";
+      toModel.addEventListener("click", function () {
+        document.getElementById("fModel").value = c.rawValue.trim();
+        toast("Preenchido no campo Modelo");
+      });
+
+      var toSerial = document.createElement("button");
+      toSerial.type = "button";
+      toSerial.className = "btn btn-sm";
+      toSerial.textContent = "→ Nº de série";
+      toSerial.addEventListener("click", function () {
+        var t = c.rawValue.trim();
+        if (t.length !== EXPECTED_SERIAL_LEN) {
+          toast("⚠ Esse código tem " + t.length + " caractere(s), não " + EXPECTED_SERIAL_LEN + " — não é o código do Serial Number. Aponte para o código logo acima de \"Serial Number\".");
+          return;
+        }
+        document.getElementById("fSerial").value = t.toUpperCase();
+        updateSerialCount();
+        toast("Nº de série preenchido: " + t.toUpperCase());
+      });
+
+      var toMac = document.createElement("button");
+      toMac.type = "button";
+      toMac.className = "btn btn-sm";
+      toMac.textContent = "→ MAC";
+      toMac.addEventListener("click", function () {
+        var hexLen = c.rawValue.replace(/[^0-9a-fA-F]/g, "").length;
+        var m = normalizeMac(c.rawValue);
+        if (!m) {
+          toast("⚠ Esse código tem " + hexLen + " caractere(s) hex, não 12 — não é o código de barras do MAC. Aponte para o código logo acima de \"MAC Address\".");
+          return;
+        }
+        document.getElementById("fMac").value = m;
+        updateMacCount();
+        toast("MAC preenchido: " + m);
+      });
+
+      chip.appendChild(toModel);
+      chip.appendChild(toSerial);
+      chip.appendChild(toMac);
+      wrap.appendChild(chip);
+
+      if (info.kind === "mac" && !document.getElementById("fMac").value) {
+        document.getElementById("fMac").value = info.clean;
+        updateMacCount();
+      }
+      if (info.kind === "serial" && !document.getElementById("fSerial").value) {
+        document.getElementById("fSerial").value = info.clean;
+        updateSerialCount();
+      }
+    });
+  }
+
+  document.getElementById("btnClearCodes").addEventListener("click", function () {
+    resetDetectedCodes();
+    toast("Códigos lidos limpos");
+  });
+
+  // ---------- live camera scan ----------
+  var stream = null;
+  var scanning = false;
+  var lastScanAt = 0;
+
+  function startScan() {
+    if (!hasDetector) return;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(function (s) {
+        stream = s;
+        var video = document.getElementById("scanVideo");
+        video.srcObject = s;
+        document.getElementById("scanFrame").classList.add("active");
+        document.getElementById("btnStartScan").style.display = "none";
+        document.getElementById("btnStopScan").style.display = "inline-flex";
+        document.getElementById("scanStatus").textContent = "Aponte a câmera para o código de barras…";
+        document.getElementById("scanStatus").dataset.state = "";
+        scanning = true;
+        requestAnimationFrame(scanLoop);
+      })
+      .catch(function (err) {
+        toast("Não foi possível acessar a câmera");
+        if (err && err.name === "NotAllowedError") {
+          document.getElementById("scanStatus").textContent =
+            "🔒 Câmera bloqueada para este site. Toque no cadeado/ⓘ ao lado do endereço → Permissões do site → Câmera → Permitir → recarregue a página.";
+        } else {
+          document.getElementById("scanStatus").textContent = "Erro ao acessar a câmera: " + (err && (err.name + " — " + err.message) ? (err.name + " — " + err.message) : err);
+        }
+      });
+  }
+
+  function stopScan() {
+    scanning = false;
+    if (stream) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      stream = null;
+    }
+    document.getElementById("scanFrame").classList.remove("active");
+    document.getElementById("btnStartScan").style.display = "inline-flex";
+    document.getElementById("btnStopScan").style.display = "none";
+  }
+
+  function scanLoop(ts) {
+    if (!scanning) return;
+    var video = document.getElementById("scanVideo");
+    if (video.readyState >= 2 && ts - lastScanAt > 180) {
+      lastScanAt = ts;
+      detector.detect(video).then(function (codes) {
+        if (codes && codes.length) {
+          var added = addDetectedCodes(codes);
+          if (added && navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
+          document.getElementById("scanStatus").textContent = added
+            ? "Novo código lido! " + seenOrder.length + " diferente(s) no total."
+            : codes.length + " código(s) no quadro (já lido antes).";
+          document.getElementById("scanStatus").dataset.state = "found";
+        }
+      }).catch(function (err) {
+        document.getElementById("scanStatus").textContent = "⚠ Erro ao ler: " + (err && (err.message || err.name) ? (err.name + " — " + err.message) : String(err));
+        document.getElementById("scanStatus").dataset.state = "";
+      });
+    }
+    requestAnimationFrame(scanLoop);
+  }
+
+  document.getElementById("btnStartScan").addEventListener("click", startScan);
+  document.getElementById("btnStopScan").addEventListener("click", stopScan);
+
+  // ---------- ZXing "Barcode Scanner" app handoff ----------
+  (function setupZxingLink() {
+    var baseUrl = location.href.split("#")[0].split("?")[0];
+    var callback = baseUrl + "?zxing_result=%s&zxing_format=%f";
+    document.getElementById("btnZxing").href = "zxing://scan/?ret=" + encodeURIComponent(callback);
+  })();
+
+  function checkZxingReturn() {
+    var params = new URLSearchParams(location.search);
+    if (!params.has("zxing_result")) return;
+    var val = params.get("zxing_result");
+    var fmt = params.get("zxing_format") || "unknown";
+    var baseUrl = location.href.split("#")[0].split("?")[0];
+    history.replaceState(null, "", baseUrl);
+    if (val) {
+      var added = addDetectedCodes([{ rawValue: val, format: fmt }]);
+      if (navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
+      toast((added ? "Código lido pelo Barcode Scanner: " : "Já tinha esse código: ") + val);
+    }
+  }
+
+  // photo capture + zoom
+  document.getElementById("photoInput").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    stopScan();
+    var url = URL.createObjectURL(file);
+    var img = document.getElementById("photoImg");
+    img.onload = function () {
+      document.getElementById("photoZoomWrap").classList.add("show");
+      applyZoom();
+      if (hasDetector) {
+        detector.detect(img).then(function (codes) {
+          if (codes && codes.length) {
+            var added = addDetectedCodes(codes);
+            toast(added ? added + " código(s) novo(s) lido(s) nesta foto" : "Códigos desta foto já estavam na lista");
+          } else if (seenOrder.length === 0) {
+            document.getElementById("codesFound").innerHTML = '<p class="scan-status">Nenhum código de barras identificado nesta foto — tire mais perto do Serial/MAC, ou digite manualmente com apoio da imagem ampliada.</p>';
+          } else {
+            toast("Nenhum código novo nesta foto");
+          }
+        }).catch(function (err) {
+          document.getElementById("codesFound").innerHTML = '<p class="scan-status">⚠ Erro ao processar a foto: ' + ((err && (err.name + " — " + err.message)) || String(err)) + '</p>';
+        });
+      }
+    };
+    img.src = url;
+  });
+
+  function applyZoom() {
+    var pct = document.getElementById("zoomSlider").value;
+    document.getElementById("photoImg").style.width = pct + "%";
+    document.getElementById("zoomLabel").textContent = pct + "%";
+  }
+  document.getElementById("zoomSlider").addEventListener("input", applyZoom);
+
+  // ---------- init ----------
+  load();
+  render();
+  updateSerialCount();
+  updateMacCount();
+  checkZxingReturn();
+
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: "camera" }).then(function (status) {
+      if (status.state === "denied") {
+        var note = document.getElementById("scanUnsupported");
+        note.classList.add("show");
+        note.textContent = "🔒 A câmera está bloqueada para este site (permissão negada antes). Toque no cadeado/ⓘ ao lado do endereço → Permissões do site → Câmera → Permitir → recarregue a página.";
+      }
+    }).catch(function () {});
+  }
+})();
+</script>
