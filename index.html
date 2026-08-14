@@ -306,11 +306,37 @@
     background: var(--surface-2);
     touch-action: pan-x pan-y;
   }
-  .photo-viewport img {
+  .photo-inner {
+    position: relative;
+    display: inline-block;
+  }
+  .photo-inner img {
     display: block;
     width: 100%;
     height: auto;
     transition: width 0.1s linear;
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+  .crop-box {
+    position: absolute;
+    border: 2.5px solid var(--accent);
+    background: rgba(217, 123, 63, 0.16);
+    box-shadow: 0 0 0 2000px rgba(5, 9, 13, 0.55);
+    touch-action: none;
+    cursor: move;
+    display: none;
+  }
+  .crop-box.show { display: block; }
+  .crop-handle {
+    position: absolute;
+    right: -11px; bottom: -11px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--accent-ink);
+    touch-action: none;
+    cursor: nwse-resize;
   }
   .zoom-row {
     display: flex;
@@ -563,14 +589,21 @@
     <p class="scan-status" id="scanStatus" aria-live="polite"></p>
 
     <div class="photo-zoom-wrap" id="photoZoomWrap">
+      <p class="hint" style="margin:0;">Amplie com o zoom, depois <strong>arraste a caixa laranja</strong> até cobrir só o código de barras que você quer (use a bolinha do canto pra redimensionar) e toque em "Ler código selecionado".</p>
       <div class="photo-viewport" id="photoViewport">
-        <img id="photoImg" alt="Foto da etiqueta do switch, amplie para ler o texto">
+        <div class="photo-inner" id="photoInner">
+          <img id="photoImg" alt="Foto da etiqueta do switch, amplie para ler o texto">
+          <div class="crop-box" id="cropBox">
+            <div class="crop-handle" id="cropHandle"></div>
+          </div>
+        </div>
       </div>
       <div class="zoom-row">
         <span>🔍 Zoom</span>
         <input type="range" id="zoomSlider" min="100" max="400" value="140" step="10">
         <span id="zoomLabel">140%</span>
       </div>
+      <button type="button" class="btn btn-primary btn-block" id="btnReadSelection">🔍 Ler código selecionado</button>
     </div>
 
     <p class="unsupported-note show" style="margin:0;">Os códigos ficam bem próximos nessa etiqueta — o app vai <strong>acumulando</strong> cada código diferente que aparecer, mesmo em fotos separadas (tire quantas fotos precisar da mesma etiqueta, de ângulos/distâncias diferentes). Nenhum some quando outro é lido; use "Limpar códigos lidos" ao trocar de equipamento.</p>
@@ -1278,7 +1311,7 @@
     }
   }
 
-  // photo capture + zoom
+  // photo capture + zoom + seleção manual
   document.getElementById("photoInput").addEventListener("change", function (e) {
     var file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -1288,22 +1321,12 @@
     img.onload = function () {
       document.getElementById("photoZoomWrap").classList.add("show");
       applyZoom();
-      if (hasDetector) {
-        detector.detect(img).then(function (codes) {
-          if (codes && codes.length) {
-            var result = addDetectedCodes(codes);
-            if (result.added) toast(result.added + " código(s) novo(s) (Serial/MAC) lido(s) nesta foto");
-            else if (result.ignored) toast("Achei " + result.ignored + " código(s) nesta foto, mas nenhum é o Serial/MAC — tente mais perto ou de outro ângulo");
-            else toast("Códigos desta foto já estavam na lista");
-          } else if (seenOrder.length === 0) {
-            document.getElementById("codesFound").innerHTML = '<p class="scan-status">Nenhum código de barras identificado nesta foto — tire mais perto do Serial/MAC, ou digite manualmente com apoio da imagem ampliada.</p>';
-          } else {
-            toast("Nenhum código novo nesta foto");
-          }
-        }).catch(function (err) {
-          document.getElementById("codesFound").innerHTML = '<p class="scan-status">⚠ Erro ao processar a foto: ' + ((err && (err.name + " — " + err.message)) || String(err)) + '</p>';
-        });
-      }
+      // caixa inicial: uma faixa larga e baixa (formato típico de código de barras), centralizada
+      cropRect = { x: 0.10, y: 0.42, w: 0.80, h: 0.16 };
+      renderCropBox();
+      document.getElementById("cropBox").classList.add("show");
+      document.getElementById("codesFound").innerHTML = "";
+      document.getElementById("scanStatus").textContent = "";
     };
     img.src = url;
   });
@@ -1314,6 +1337,104 @@
     document.getElementById("zoomLabel").textContent = pct + "%";
   }
   document.getElementById("zoomSlider").addEventListener("input", applyZoom);
+
+  // ---------- caixa de seleção arrastável/redimensionável sobre a foto ----------
+  var cropRect = { x: 0.10, y: 0.42, w: 0.80, h: 0.16 };
+  var cropDrag = null; // { mode: 'move'|'resize', startX, startY, startRect }
+
+  function renderCropBox() {
+    var box = document.getElementById("cropBox");
+    box.style.left = (cropRect.x * 100) + "%";
+    box.style.top = (cropRect.y * 100) + "%";
+    box.style.width = (cropRect.w * 100) + "%";
+    box.style.height = (cropRect.h * 100) + "%";
+  }
+
+  function clampCropRect() {
+    cropRect.w = Math.max(0.05, Math.min(cropRect.w, 1));
+    cropRect.h = Math.max(0.03, Math.min(cropRect.h, 1));
+    cropRect.x = Math.max(0, Math.min(cropRect.x, 1 - cropRect.w));
+    cropRect.y = Math.max(0, Math.min(cropRect.y, 1 - cropRect.h));
+  }
+
+  function innerRect() {
+    return document.getElementById("photoInner").getBoundingClientRect();
+  }
+
+  document.getElementById("cropBox").addEventListener("pointerdown", function (e) {
+    if (e.target.id === "cropHandle") return;
+    e.preventDefault();
+    this.setPointerCapture(e.pointerId);
+    var r = innerRect();
+    cropDrag = { mode: "move", startClientX: e.clientX, startClientY: e.clientY, startRect: { x: cropRect.x, y: cropRect.y }, innerW: r.width, innerH: r.height };
+  });
+
+  document.getElementById("cropHandle").addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setPointerCapture(e.pointerId);
+    var r = innerRect();
+    cropDrag = { mode: "resize", startClientX: e.clientX, startClientY: e.clientY, startRect: { w: cropRect.w, h: cropRect.h }, innerW: r.width, innerH: r.height };
+  });
+
+  function onCropPointerMove(e) {
+    if (!cropDrag) return;
+    var dxFrac = (e.clientX - cropDrag.startClientX) / cropDrag.innerW;
+    var dyFrac = (e.clientY - cropDrag.startClientY) / cropDrag.innerH;
+    if (cropDrag.mode === "move") {
+      cropRect.x = cropDrag.startRect.x + dxFrac;
+      cropRect.y = cropDrag.startRect.y + dyFrac;
+    } else {
+      cropRect.w = cropDrag.startRect.w + dxFrac;
+      cropRect.h = cropDrag.startRect.h + dyFrac;
+    }
+    clampCropRect();
+    renderCropBox();
+  }
+  function onCropPointerUp() { cropDrag = null; }
+
+  document.getElementById("cropBox").addEventListener("pointermove", onCropPointerMove);
+  document.getElementById("cropBox").addEventListener("pointerup", onCropPointerUp);
+  document.getElementById("cropBox").addEventListener("pointercancel", onCropPointerUp);
+  document.getElementById("cropHandle").addEventListener("pointermove", onCropPointerMove);
+  document.getElementById("cropHandle").addEventListener("pointerup", onCropPointerUp);
+  document.getElementById("cropHandle").addEventListener("pointercancel", onCropPointerUp);
+
+  document.getElementById("btnReadSelection").addEventListener("click", function () {
+    if (!hasDetector) { toast("Este navegador não lê código de barras automaticamente — digite os dados olhando a foto ampliada."); return; }
+    var img = document.getElementById("photoImg");
+    if (!img.naturalWidth) { toast("Carregue uma foto primeiro"); return; }
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    var sx = cropRect.x * nw, sy = cropRect.y * nh, sw = cropRect.w * nw, sh = cropRect.h * nh;
+    var canvas = document.createElement("canvas");
+    canvas.width = sw; canvas.height = sh;
+    canvas.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    document.getElementById("scanStatus").textContent = "Analisando a seleção…";
+    detector.detect(canvas).then(function (codes) {
+      if (!codes || !codes.length) {
+        document.getElementById("scanStatus").textContent = "Nenhum código encontrado dentro da caixa — ajuste a posição/tamanho (aproxime bem do código) e toque em Ler de novo.";
+        document.getElementById("scanStatus").dataset.state = "";
+        return;
+      }
+      var result = addDetectedCodes(codes);
+      if (result.added) {
+        if (navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
+        document.getElementById("scanStatus").textContent = "✓ Código válido lido! " + seenOrder.length + " no total.";
+        document.getElementById("scanStatus").dataset.state = "found";
+      } else if (result.ignored) {
+        if (navigator.vibrate) { try { navigator.vibrate([50, 60, 50]); } catch (e) {} }
+        document.getElementById("scanStatus").textContent = "❌ Isso não é o Serial nem o MAC — mova a caixa pro código certo e leia de novo.";
+        document.getElementById("scanStatus").dataset.state = "";
+      } else {
+        document.getElementById("scanStatus").textContent = "Esse código já tinha sido lido.";
+        document.getElementById("scanStatus").dataset.state = "";
+      }
+    }).catch(function (err) {
+      document.getElementById("scanStatus").textContent = "⚠ Erro ao ler: " + (err && (err.name + " — " + err.message) ? (err.name + " — " + err.message) : err);
+      document.getElementById("scanStatus").dataset.state = "";
+    });
+  });
 
   // ---------- init ----------
   load();
@@ -1333,4 +1454,3 @@
   }
 })();
 </script>
-
