@@ -214,6 +214,14 @@
   .btn-block { width: 100%; }
   .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn-sm { padding: 6px 10px; font-size: 12.5px; border-radius: 6px; }
+  .pulse-attn { animation: pulseAttn 0.55s ease-in-out 3; box-shadow: 0 0 0 3px var(--danger); }
+  @keyframes pulseAttn {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-attn { animation: none; }
+  }
 
   /* ---- capture ---- */
   .scan-frame {
@@ -1011,15 +1019,23 @@
     return { kind: "unknown", clean: value };
   }
 
+  // Só nos interessa um código que seja exatamente o Serial (10 car.) ou o MAC (12 hex) —
+  // qualquer outro código lido (Product Number, Software Version, etc.) é ignorado por completo.
+  function isRelevantCode(value) {
+    return !!normalizeMac(value) || isExpectedSerial(value);
+  }
+
   function addDetectedCodes(codes) {
     var added = 0;
+    var ignored = 0;
     codes.forEach(function (c) {
       if (!c || !c.rawValue) return;
+      if (!isRelevantCode(c.rawValue)) { ignored++; return; }
       if (!(c.rawValue in seenCodes)) { seenOrder.push(c.rawValue); added++; }
       seenCodes[c.rawValue] = c;
     });
     renderCodesFound(seenOrder.map(function (v) { return seenCodes[v]; }));
-    return added;
+    return { added: added, ignored: ignored };
   }
 
   function resetDetectedCodes() {
@@ -1058,15 +1074,6 @@
         chip.appendChild(tagS);
       }
 
-      var toModel = document.createElement("button");
-      toModel.type = "button";
-      toModel.className = "btn btn-sm";
-      toModel.textContent = "→ Modelo";
-      toModel.addEventListener("click", function () {
-        document.getElementById("fModel").value = c.rawValue.trim();
-        toast("Preenchido no campo Modelo");
-      });
-
       var toSerial = document.createElement("button");
       toSerial.type = "button";
       toSerial.className = "btn btn-sm";
@@ -1098,7 +1105,6 @@
         toast("MAC preenchido: " + m);
       });
 
-      chip.appendChild(toModel);
       chip.appendChild(toSerial);
       chip.appendChild(toMac);
       wrap.appendChild(chip);
@@ -1168,12 +1174,22 @@
       lastScanAt = ts;
       detector.detect(video).then(function (codes) {
         if (codes && codes.length) {
-          var added = addDetectedCodes(codes);
-          if (added && navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
-          document.getElementById("scanStatus").textContent = added
-            ? "Novo código lido! " + seenOrder.length + " diferente(s) no total."
-            : codes.length + " código(s) no quadro (já lido antes).";
-          document.getElementById("scanStatus").dataset.state = "found";
+          var result = addDetectedCodes(codes);
+          if (result.added && navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
+          if (result.added) {
+            document.getElementById("scanStatus").textContent = "✓ Novo código válido lido! " + seenOrder.length + " no total.";
+            document.getElementById("scanStatus").dataset.state = "found";
+          } else if (result.ignored) {
+            document.getElementById("scanStatus").textContent = "Código no quadro não é o Serial nem o MAC — ignorado. Continue mirando…";
+            document.getElementById("scanStatus").dataset.state = "";
+          }
+          var serialDone = !!document.getElementById("fSerial").value;
+          var macDone = !!document.getElementById("fMac").value;
+          if (serialDone && macDone) {
+            stopScan();
+            toast("✅ Serial e MAC capturados! Confira e adicione à tabela.");
+            document.getElementById("scanStatus").textContent = "✅ Concluído — câmera desligada automaticamente.";
+          }
         }
       }).catch(function (err) {
         document.getElementById("scanStatus").textContent = "⚠ Erro ao ler: " + (err && (err.message || err.name) ? (err.name + " — " + err.message) : String(err));
@@ -1200,10 +1216,28 @@
     var fmt = params.get("zxing_format") || "unknown";
     var baseUrl = location.href.split("#")[0].split("?")[0];
     history.replaceState(null, "", baseUrl);
-    if (val) {
-      var added = addDetectedCodes([{ rawValue: val, format: fmt }]);
-      if (navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
-      toast((added ? "Código lido pelo Barcode Scanner: " : "Já tinha esse código: ") + val);
+    if (!val) return;
+
+    var hint = document.getElementById("zxingHint");
+    var btn = document.getElementById("btnZxing");
+
+    if (!isRelevantCode(val)) {
+      hint.textContent = "❌ Isso não é o Serial nem o MAC (leu: \"" + val + "\", " + val.trim().length + " caracteres). Toque em \"Abrir Barcode Scanner\" de novo e aponte pro código certo (logo acima de \"Serial Number\" ou \"MAC Address\").";
+      hint.className = "hint err";
+      btn.classList.add("pulse-attn");
+      setTimeout(function () { btn.classList.remove("pulse-attn"); }, 3000);
+      if (navigator.vibrate) { try { navigator.vibrate([50, 60, 50]); } catch (e) {} }
+      return;
+    }
+
+    var result = addDetectedCodes([{ rawValue: val, format: fmt }]);
+    if (navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
+    if (result.added) {
+      hint.textContent = "✓ Capturado: " + val + ". " + (document.getElementById("fSerial").value && document.getElementById("fMac").value ? "Serial e MAC completos — confira e adicione à tabela." : "Toque em \"Abrir Barcode Scanner\" de novo pra ler o outro código.");
+      hint.className = "hint ok";
+    } else {
+      hint.textContent = "Esse código já tinha sido lido: " + val;
+      hint.className = "hint";
     }
   }
 
@@ -1220,8 +1254,10 @@
       if (hasDetector) {
         detector.detect(img).then(function (codes) {
           if (codes && codes.length) {
-            var added = addDetectedCodes(codes);
-            toast(added ? added + " código(s) novo(s) lido(s) nesta foto" : "Códigos desta foto já estavam na lista");
+            var result = addDetectedCodes(codes);
+            if (result.added) toast(result.added + " código(s) novo(s) (Serial/MAC) lido(s) nesta foto");
+            else if (result.ignored) toast("Achei " + result.ignored + " código(s) nesta foto, mas nenhum é o Serial/MAC — tente mais perto ou de outro ângulo");
+            else toast("Códigos desta foto já estavam na lista");
           } else if (seenOrder.length === 0) {
             document.getElementById("codesFound").innerHTML = '<p class="scan-status">Nenhum código de barras identificado nesta foto — tire mais perto do Serial/MAC, ou digite manualmente com apoio da imagem ampliada.</p>';
           } else {
