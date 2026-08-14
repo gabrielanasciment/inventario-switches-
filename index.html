@@ -236,44 +236,42 @@
   .scan-frame video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
+    background: #05090d;
   }
-  .scan-reticle {
+  /* Faixa de mira: só a área dentro dela é lida quando o botão "Capturar" é tocado.
+     As duas tarjas escuras acima/abaixo deixam claro o que fica de fora da leitura. */
+  .band-shade-top, .band-shade-bottom {
     position: absolute;
-    inset: 14% 10%;
+    left: 0; right: 0;
+    background: rgba(5, 9, 13, 0.72);
     pointer-events: none;
   }
-  .scan-reticle::before,
-  .scan-reticle::after,
-  .scan-reticle span::before,
-  .scan-reticle span::after {
-    content: "";
+  .band-shade-top { top: 0; height: 40%; }
+  .band-shade-bottom { bottom: 0; height: 40%; }
+  .band-line {
     position: absolute;
-    width: 26px;
-    height: 26px;
-    border: 2.5px solid var(--accent);
+    left: 6%; right: 6%;
+    top: 40%; height: 20%;
+    border-top: 2.5px dashed var(--accent);
+    border-bottom: 2.5px dashed var(--accent);
+    pointer-events: none;
   }
-  .scan-reticle::before { top: 0; left: 0; border-right: none; border-bottom: none; }
-  .scan-reticle::after { top: 0; right: 0; border-left: none; border-bottom: none; }
-  .scan-reticle span::before { bottom: 0; left: 0; border-right: none; border-top: none; }
-  .scan-reticle span::after { bottom: 0; right: 0; border-left: none; border-top: none; }
-  .scan-line {
+  .band-line::before {
+    content: "alinhe o código aqui";
     position: absolute;
-    left: 10%;
-    right: 10%;
-    top: 14%;
-    height: 2px;
-    background: var(--accent);
-    box-shadow: 0 0 8px 1px var(--accent);
-    animation: scanmove 1.7s ease-in-out infinite;
+    top: -20px; left: 0;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--accent);
+    text-transform: uppercase;
   }
-  @keyframes scanmove {
-    0%, 100% { top: 14%; }
-    50% { top: 84%; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .scan-line { animation: none; top: 49%; }
+  .scan-capture-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
   }
 
   .scan-status {
@@ -549,14 +547,18 @@
       <label class="btn" for="photoInput">🖼️ Tirar / enviar foto</label>
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="sr-only">
     </div>
-    <p class="hint" id="zxingHint" style="margin:0;">"Escanear com a câmera" lê ao vivo pelo navegador. "Barcode Scanner (ZXing)" abre o app dedicado que você já tem instalado (se houver) e volta pra cá sozinho com o valor.</p>
+    <p class="hint" id="zxingHint" style="margin:0;">"Escanear com a câmera" abre a câmera do navegador — alinhe o código na faixa e toque em "Capturar", ele só lê o que estiver dentro dela. "Barcode Scanner (ZXing)" abre o app dedicado que você já tem instalado (se houver) e volta pra cá sozinho com o valor.</p>
 
     <p class="unsupported-note" id="scanUnsupported">Este navegador não oferece leitura automática de código de barras. Use "Tirar/enviar foto" e digite os dados com apoio da imagem ampliada, ou peça pro Claude ler a foto no chat e cole o resultado em "⚡ Colar leitura".</p>
 
     <div class="scan-frame" id="scanFrame">
       <video id="scanVideo" autoplay muted playsinline></video>
-      <div class="scan-reticle"><span></span></div>
-      <div class="scan-line"></div>
+      <div class="band-shade-top"></div>
+      <div class="band-shade-bottom"></div>
+      <div class="band-line"></div>
+    </div>
+    <div class="scan-capture-row" id="scanCaptureRow" style="display:none;">
+      <button type="button" class="btn btn-primary btn-block" id="btnCapture">📸 Capturar código na faixa</button>
     </div>
     <p class="scan-status" id="scanStatus" aria-live="polite"></p>
 
@@ -1127,8 +1129,6 @@
 
   // ---------- live camera scan ----------
   var stream = null;
-  var scanning = false;
-  var lastScanAt = 0;
 
   function startScan() {
     if (!hasDetector) return;
@@ -1138,12 +1138,11 @@
         var video = document.getElementById("scanVideo");
         video.srcObject = s;
         document.getElementById("scanFrame").classList.add("active");
+        document.getElementById("scanCaptureRow").style.display = "flex";
         document.getElementById("btnStartScan").style.display = "none";
         document.getElementById("btnStopScan").style.display = "inline-flex";
-        document.getElementById("scanStatus").textContent = "Aponte a câmera para o código de barras…";
+        document.getElementById("scanStatus").textContent = "Alinhe o código dentro da faixa e toque em \"Capturar código na faixa\".";
         document.getElementById("scanStatus").dataset.state = "";
-        scanning = true;
-        requestAnimationFrame(scanLoop);
       })
       .catch(function (err) {
         toast("Não foi possível acessar a câmera");
@@ -1157,47 +1156,85 @@
   }
 
   function stopScan() {
-    scanning = false;
     if (stream) {
       stream.getTracks().forEach(function (t) { t.stop(); });
       stream = null;
     }
     document.getElementById("scanFrame").classList.remove("active");
+    document.getElementById("scanCaptureRow").style.display = "none";
     document.getElementById("btnStartScan").style.display = "inline-flex";
     document.getElementById("btnStopScan").style.display = "none";
   }
 
-  function scanLoop(ts) {
-    if (!scanning) return;
+  // Corta o frame da câmera só na região da faixa (band-line: top 40%–60%, left/right 6%–94%
+  // dentro da área realmente ocupada pelo vídeo, já que object-fit:contain pode deixar
+  // barras pretas nas laterais/topo quando a proporção da câmera não é 4:3) e decodifica só ali.
+  function captureBandFrame() {
     var video = document.getElementById("scanVideo");
-    if (video.readyState >= 2 && ts - lastScanAt > 180) {
-      lastScanAt = ts;
-      detector.detect(video).then(function (codes) {
-        if (codes && codes.length) {
-          var result = addDetectedCodes(codes);
-          if (result.added && navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
-          if (result.added) {
-            document.getElementById("scanStatus").textContent = "✓ Novo código válido lido! " + seenOrder.length + " no total.";
-            document.getElementById("scanStatus").dataset.state = "found";
-          } else if (result.ignored) {
-            document.getElementById("scanStatus").textContent = "Código no quadro não é o Serial nem o MAC — ignorado. Continue mirando…";
-            document.getElementById("scanStatus").dataset.state = "";
-          }
-          var serialDone = !!document.getElementById("fSerial").value;
-          var macDone = !!document.getElementById("fMac").value;
-          if (serialDone && macDone) {
-            stopScan();
-            toast("✅ Serial e MAC capturados! Confira e adicione à tabela.");
-            document.getElementById("scanStatus").textContent = "✅ Concluído — câmera desligada automaticamente.";
-          }
-        }
-      }).catch(function (err) {
-        document.getElementById("scanStatus").textContent = "⚠ Erro ao ler: " + (err && (err.message || err.name) ? (err.name + " — " + err.message) : String(err));
-        document.getElementById("scanStatus").dataset.state = "";
-      });
+    if (!video.videoWidth) return null;
+
+    var containerW = video.clientWidth, containerH = video.clientHeight;
+    var vw = video.videoWidth, vh = video.videoHeight;
+    var scale = Math.min(containerW / vw, containerH / vh);
+    var dispW = vw * scale, dispH = vh * scale;
+    var offX = (containerW - dispW) / 2, offY = (containerH - dispH) / 2;
+
+    function containerPctToVideoPx(xPct, yPct, wPct, hPct) {
+      var xPx = xPct * containerW, yPx = yPct * containerH;
+      var wPx = wPct * containerW, hPx = hPct * containerH;
+      var sx = (xPx - offX) / scale, sy = (yPx - offY) / scale;
+      var sw = wPx / scale, sh = hPx / scale;
+      sx = Math.max(0, sx); sy = Math.max(0, sy);
+      sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+      return { sx: sx, sy: sy, sw: sw, sh: sh };
     }
-    requestAnimationFrame(scanLoop);
+
+    var rect = containerPctToVideoPx(0.06, 0.40, 0.88, 0.20);
+    if (rect.sw <= 4 || rect.sh <= 4) return null;
+
+    var canvas = document.createElement("canvas");
+    canvas.width = rect.sw;
+    canvas.height = rect.sh;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(video, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, rect.sw, rect.sh);
+    return canvas;
   }
+
+  document.getElementById("btnCapture").addEventListener("click", function () {
+    var canvas = captureBandFrame();
+    if (!canvas) { toast("Câmera ainda carregando, tente de novo em 1s"); return; }
+    document.getElementById("scanStatus").textContent = "Analisando…";
+    detector.detect(canvas).then(function (codes) {
+      if (!codes || !codes.length) {
+        document.getElementById("scanStatus").textContent = "Nenhum código encontrado na faixa — alinhe melhor (aproxime ou centralize) e toque em Capturar de novo.";
+        document.getElementById("scanStatus").dataset.state = "";
+        return;
+      }
+      var result = addDetectedCodes(codes);
+      if (result.added) {
+        if (navigator.vibrate) { try { navigator.vibrate(70); } catch (e) {} }
+        document.getElementById("scanStatus").textContent = "✓ Código válido capturado! " + seenOrder.length + " no total.";
+        document.getElementById("scanStatus").dataset.state = "found";
+      } else if (result.ignored) {
+        if (navigator.vibrate) { try { navigator.vibrate([50, 60, 50]); } catch (e) {} }
+        document.getElementById("scanStatus").textContent = "❌ Isso não é o Serial nem o MAC — mova a câmera até a faixa ficar só sobre o código certo e capture de novo.";
+        document.getElementById("scanStatus").dataset.state = "";
+      } else {
+        document.getElementById("scanStatus").textContent = "Esse código já tinha sido lido.";
+        document.getElementById("scanStatus").dataset.state = "";
+      }
+      var serialDone = !!document.getElementById("fSerial").value;
+      var macDone = !!document.getElementById("fMac").value;
+      if (serialDone && macDone) {
+        stopScan();
+        toast("✅ Serial e MAC capturados! Confira e adicione à tabela.");
+        document.getElementById("scanStatus").textContent = "✅ Concluído — câmera desligada automaticamente.";
+      }
+    }).catch(function (err) {
+      document.getElementById("scanStatus").textContent = "⚠ Erro ao ler: " + (err && (err.message || err.name) ? (err.name + " — " + err.message) : String(err));
+      document.getElementById("scanStatus").dataset.state = "";
+    });
+  });
 
   document.getElementById("btnStartScan").addEventListener("click", startScan);
   document.getElementById("btnStopScan").addEventListener("click", stopScan);
@@ -1296,3 +1333,4 @@
   }
 })();
 </script>
+
